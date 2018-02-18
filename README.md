@@ -1,27 +1,12 @@
-# GSW Math tournament 2018 
+# Raspberry flavored Scantron pie
 
-## School divisions <hr>
-### GISA (private schools)
-* GISA AA
-* GISA AAA
-### GHSA (public schools)
-* GHSA A
-* GHSA AA
-* GHSA AAA
-* GHSA AAAA
-* GHSA AAAAA
-* GHSA AAAAAA
-* GHSA AAAAAAA
+## Intro
+This project is influenced by idea of controlling proprietary Scantron machine(s) without using original Scantron software. We have an old Scantron (used once every year to scan approximately 400 sheets during the event of [High School Math Tournament](http://hmt.gswcm.net/about) that we organize at GSW) connected to an old PC, running under control of Windows 98... that  is dreaming about retirement. The outdated proprietary software refused to run on any modern platform, so we decided to keep the machine and retire the original software. 
 
-## Contact information <hr>
+Our Scantron utilizes RS-232 interface to connect to the PC so we sniffed and reverse engineered proprietary protocol. We then decided to use Raspberry Pi running NodeJS application to mimic the protocol so the machine would be tricked to "talk" to RasPi while thinking that it "talks" to the proprietary controller. 
 
-* Name of the contact person*
-* School name*
-* E-mail*
-* Phone
+We went even further and created a **Scantron simulator** that pretends to be a Scantron machine "scanning" certain number (set by a configuration parameter) of forms. Of course instead of scanning forms it generates random scan data but does so with respect to form definitions sent from the Scantron controller. In other words, having our Scantron simulator plugged into that old Windows 98 PC could trick the proprietary software so it think that it "talks" to the genuine Scantron machine. The simulator runs off of the built-in serial interface (the one that is used for *serial console* by default, i.e. `/dev/ttyAMA0`) soldered on the RasPi board at the main [40-pin connector](https://pinout.xyz/). We use **GND**, **Tx**, and **Rx** pins on the connector to plug the TTL side of a **USB Serial to TTL** [converter](https://www.adafruit.com/product/954) while plugging the USB side of the converter into one of the available USB ports on the RasPi. Such configuration allows us to use one RasPi board to run both Scantron controller and Scantron simulator. Moreover, having both the Scantron machine (via USB to Serial adapter) and our simulator plugged into RasPi allows us to choose one of them as the source of scanned data.  
 
-## Team information <hr>
-* For every student need name only
-* Up to 8 students for $75 per team if paid **before** deadline, and $100 if paid **after** deadline. 
-* Charge for every extra student (if more than 8) $5  
-* Meal ticket cost is $7.5
+## The Software Stack
+The application implements a full stack web application methodology. The **frontend** side is written in [VueJS](https://vuejs.org) framework and is bundled by Webpack. The **backend** side is implemented using [Express](https://expressjs.com) framework running under control of NodeJS platform. The realtime communication between frontend and backend is implemented by utilizing [Socket.io](https://socket.io/) library. The low-level serial communication is implemented with the help of [Node Serialport](https://github.com/node-serialport/node-serialport).
+
