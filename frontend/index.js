@@ -6,24 +6,30 @@ import './assets/sitemap.xml';
 import vue from 'vue';
 import vueRouter from 'vue-router';
 import vueNoty from 'vuejs-noty';
-import vueSocketio from 'vue-socket.io';
+// import vueSocketio from 'vue-socket.io';
 import axios from 'axios';
 import vueAxios from 'vue-axios';
 import fontawesome from '@fortawesome/fontawesome';
 import fontAwesomeIcon from '@fortawesome/vue-fontawesome';
 import { 
-	faDownload,
+	faDownload, 
+	faSyncAlt,
+    faPlay,
+    faStop,
 } from '@fortawesome/fontawesome-free-solid';
 import bootstrapVue from 'bootstrap-vue';
 import root from './components/root.vue';
 // import 'bootstrap/dist/css/bootstrap.css';
-import 'bootswatch/dist/cyborg/bootstrap.min.css';
+import 'bootswatch/dist/cyborg/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 import 'vuejs-noty/dist/vuejs-noty.css';
 
 // Font Awesome 5 configurations
 fontawesome.library.add(
 	faDownload,
+	faSyncAlt,
+	faPlay,
+	faStop
 );
 
 const router = new vueRouter({
@@ -39,7 +45,7 @@ const router = new vueRouter({
 vue.component('font-awesome-icon', fontAwesomeIcon);
 vue.use(bootstrapVue);
 vue.use(vueRouter);
-vue.use(vueSocketio, '/scantron');
+// vue.use(vueSocketio, '/scantron');
 vue.use(vueAxios, axios);
 vue.use(vueNoty, {
 	killer: true,

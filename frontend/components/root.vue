@@ -1,12 +1,9 @@
 <template>
-	<div class="root">
+	<div class="root container p-3">
 		<router-view></router-view>
 	</div>
 </template>
 
 <style>
-	.root {
-		min-width: 420px;
-	}
 </style>
 

@@ -30,7 +30,7 @@ const commonConfig = merge([
 			new HtmlWebpackPlugin({
 				inject: false,
 				template: require("html-webpack-template-pug"),
-				title: "PiTron | Raspberry flavored Scantron pie",
+				title: "PiTron | Scantron flavored raspberry pie",
 				injectExtras: {
 					head: [
 						{
@@ -60,7 +60,8 @@ const commonConfig = merge([
 			}),
 			new GoogleFontsPlugin({
 				fonts: [
-					{ family: "Roboto Mono", variants: ["500"] }
+					{ family: "Roboto Mono", variants: ["500"] },
+					{ family: "Mukta Mahee" }
 				]
 			}),
 			new ProgressPlugin(true),
