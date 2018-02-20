@@ -56,16 +56,23 @@ class Scanner extends eventEmitter {
 				parity: 'none',
 				autoOpen: false,
 			}
-		);				
+		);		
+		//-- Scanner events
+		this.on('error', error => {
+			console.error(`Scanner event: ${error.message}`);
+		});
 	}
 	errorHandler(error) {
+		this.emit('error', error);
 		if(this.port && this.port.isOpen) {
 			this.port.close();
 		}
-		this.emit('error', error.message);
 	}
 	openHandler() {
 		this.fsmState = "doReset";
+		this.fsmSubState = 0;
+		this.sheetCounter = 0;
+		this.frmDataLength = 0;
 		this.write("\x0D\x1BQREV\x0D");	
 	}
 	write(data) {
@@ -200,15 +207,10 @@ class Scanner extends eventEmitter {
 				break;
 		}
 	}
-	action() {
-		this.fsmState = "";
-		this.fsmSubState = 0;
-		this.sheetCounter = 0;
-		this.frmDataLength = 0;
+	start() {
 		this.port
 		.on('error', this.errorHandler.bind(this))
 		.on('open', this.openHandler.bind(this));
-		//.on('data', this.dataHandler.bind(this)); 
 		this.port.pipe(new serialPort.parsers.Delimiter(
 			{
 				delimiter: Buffer.from('\r', 'utf8'), 
@@ -216,8 +218,7 @@ class Scanner extends eventEmitter {
 				includeDelimiter: true
 			}
 		))
-		.on('data', this.dataHandler.bind(this));
-		
+		.on('data', this.dataHandler.bind(this));		
 		this.port.open();
 	}
 	findScantron() {

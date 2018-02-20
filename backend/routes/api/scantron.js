@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const errToJSON = require('error-to-json');
-const Scanner = require('../../lib/scanner');
+const Scanner = require('../../scantron/components/scanner');
 
 router.post('/list', (req, res) => {
 	Scanner.findScantrons()
@@ -17,6 +17,9 @@ router.post('/list', (req, res) => {
 			error: errToJSON(error)
 		});
 	});
+});
+
+router.post('/results', (req, res) => {
 });
 
 module.exports = router;

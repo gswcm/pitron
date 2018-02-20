@@ -6,7 +6,7 @@
 		</div>
 		<b-row class="mt-3">
 			<!-- Settings -->
-			<b-col cols="12" sm="5">
+			<b-col cols="12" sm="5" class="pl-0">
 				<!-- Select Scantron device -->
 				<b-row align-v="end" class="mt-4">
 					<b-col cols="12">
@@ -30,12 +30,12 @@
 						<label><strong>Simulator service</strong></label>
 					</b-col>
 					<b-col cols="auto">
-						<b-btn :disabled="simIsRunning" variant="outline-light" @click="simController('start')" size="sm">
+						<b-btn :disabled="simIsRunning" variant="outline-light" @click="$socket.emit('simulatorStart')" size="sm">
 							<font-awesome-icon :icon="['fas', 'play']"/>
 						</b-btn>					
 					</b-col>
 					<b-col cols="auto" class="pl-0">
-						<b-btn :disabled="!simIsRunning" variant="outline-light" @click="simController('stop')" size="sm">
+						<b-btn :disabled="!simIsRunning" variant="outline-light" @click="$socket.emit('simulatorStop')" size="sm">
 							<font-awesome-icon :icon="['fas', 'stop']"/>
 						</b-btn>					
 					</b-col>
@@ -88,9 +88,6 @@ export default {
 	created() {
 	},
 	methods: {
-		simController(action) {
-			this.$socket.emit(action);
-		},
 		getDevices() {
 			this.axios
 			.post("/api/list", {})

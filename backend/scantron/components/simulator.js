@@ -13,7 +13,7 @@ class Simulator extends eventEmitter {
 		this.endChar = "!";
 		//-- Simulator events
 		this.on('error', error => {
-			console.error(`Simulator 'error' event: ${error}`);
+			console.error(`Simulator event: ${error.message}`);
 		});
 		this.path = path || '/dev/ttyS0';
 		//-- Serialport instance and events
@@ -185,27 +185,4 @@ class Simulator extends eventEmitter {
 	}
 }
 
-module.exports = io => {
-	io.on('connect', socket => {
-		console.log(`Socket '${socket.id}' connected from ${socket.handshake.address} on ${socket.handshake.time}`);
-		//-- Simulator and its events
-		let simulator = new Simulator('/dev/ttyS0')
-		.on('error', error => {
-			socket.emit('simulatorError', error.message);
-		})
-		.on('started', () => {
-			socket.emit('simulatorStarted');
-		})
-		.on('stopped', () => {
-			socket.emit('simulatorStopped');
-		});
-		//-- Socket events
-		socket
-		.on('start', () => {
-			simulator.controller('start');
-		})
-		.on('stop', () => {
-			simulator.controller('stop');
-		});
-	});
-};
+module.exports = Simulator;

@@ -1,5 +1,5 @@
 <template>
-	<div class="root container p-3">
+	<div class="root container py-3">
 		<router-view></router-view>
 	</div>
 </template>

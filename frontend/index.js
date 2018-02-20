@@ -45,7 +45,7 @@ const router = new vueRouter({
 vue.component('font-awesome-icon', fontAwesomeIcon);
 vue.use(bootstrapVue);
 vue.use(vueRouter);
-vue.use(vueSocketio, '/simulator');
+vue.use(vueSocketio, '/');
 vue.use(vueAxios, axios);
 vue.use(vueNoty, {
 	killer: true,

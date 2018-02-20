@@ -5,13 +5,13 @@ const logger = require("morgan");
 const bodyParser = require("body-parser");
 const history = require("connect-history-api-fallback");
 const socketio = require("socket.io");
-const simulator = require("./lib/simulator");
 //-- Express initialization
 const io = new socketio();
 const app = express();
 //-- Socket.io initialization
 app.set("socketio", io);
-simulator(io.of("/simulator"));
+require("./scantron/simulator")(io);
+require("./scantron/scantron")(io);
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
