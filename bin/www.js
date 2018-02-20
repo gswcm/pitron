@@ -4,19 +4,19 @@
  * Module dependencies.
  */
 
-var app = require('../backend/index');
-var debug = require('debug')('pitron:server');
-var http = require('http');
+const app = require('../backend/index');
+const debug = require('debug')('pitron:server');
+const http = require('http');
 
-var port = normalizePort(process.env.PORT || '4000');
+const port = normalizePort(process.env.PORT || '4000');
 app.set('port', port);
 
-
+// Start HTTP server
 var server = http.createServer(app);
 app.get('socketio').listen(server);
 server.listen(port);
 server.on('error', onServerError);
-server.on('listening', function(){
+server.on('listening', function() {
 	var addr = server.address();
 	var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
 	debug('Listening on ' + bind);

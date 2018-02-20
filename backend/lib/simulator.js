@@ -11,7 +11,12 @@ class Simulator extends eventEmitter {
 		this.sheetCounter = 0;
 		this.mc = [];
 		this.endChar = "!";
+		//-- Simulator events
+		this.on('error', error => {
+			console.error(`Simulator 'error' event: ${error}`);
+		});
 		this.path = path || '/dev/ttyS0';
+		//-- Serialport instance and events
 		this.port = new serialPort(
 			this.path, {
 				baudRate: 9600,
@@ -20,7 +25,30 @@ class Simulator extends eventEmitter {
 				parity: 'none',
 				autoOpen: false
 			}
-		);			
+		)
+		.on('error', this.errorHandler.bind(this))
+		.on('open', this.openHandler.bind(this))
+		.on('close', this.closeHandler.bind(this));
+		//-- Data stream handler
+		this.port.pipe(new serialPort.parsers.Delimiter({
+			delimiter: Buffer.from('\r', 'utf8'), 
+			encoding: 'utf8',
+			includeDelimiter: true
+		}))
+		.on('data', this.dataHandler.bind(this));
+	}
+	controller(action) {
+		if(['stop', 'start'].indexOf(action) !== -1) {
+			if(this.port && this.port.isOpen) {
+				this.port.close();
+			}
+		}
+		if(action === 'start') {
+			this.port.open();
+		}
+	}
+	isRunning() {
+		return this.port.isOpen;
 	}
 	setNumSheets(numSheets) {
 		this.numSheets = numSheets;
@@ -31,13 +59,21 @@ class Simulator extends eventEmitter {
 		return this;
 	}
 	errorHandler(error) {
+		this.emit('error', error);
 		if(this.port && this.port.isOpen) {
 			this.port.close();
 		}
-		this.emit('error',error.message);
+	}
+	closeHandler() {
+		this.emit('stopped');
 	}
 	openHandler() {
 		this.fsmState = "sendName";
+		this.fsmSubState = 0;
+		this.sheetCounter = 0;
+		this.mc = [];
+		this.endChar = "!";
+		this.emit('started');
 	}
 	write(data) {
 		this.port.write(data, (err) => {
@@ -61,7 +97,7 @@ class Simulator extends eventEmitter {
 					// NOP
 				}
 				else if (data.indexOf("QREV") > -1) {
-					this.write("\x0DMODEL Scantron Simulator\x0D");
+					this.write(`\x0DMODEL Simulator on ${this.path}\x0D`);
 				}
 				else if (data.indexOf("SRST") > -1) {
 					this.fsmState = "getFormData";
@@ -116,10 +152,13 @@ class Simulator extends eventEmitter {
 				else if (this.fsmSubState === 1 && data.indexOf("READ") > -1) {
 					if (this.sheetCounter >= this.numSheets) {
 						this.port.write(this.endChar + "\x0D", () => {
-							this.emit('done', this.sheetCounter);
-							if(this.port && this.port.isOpen) {
-								this.port.close();
-							}
+							//-- Done with with one simulation batch, start the other
+							console.log(`${this.path}: simulated ${this.sheetCounter} sheets`);
+							this.fsmState = "sendName";
+							this.fsmSubState = 0;
+							this.sheetCounter = 0;
+							this.mc = [];
+							this.endChar = "!";
 						});
 						return;
 					}
@@ -144,46 +183,29 @@ class Simulator extends eventEmitter {
 				break;
 		}
 	}
-	action() {
-		this.fsmState = "";
-		this.fsmSubState = 0;
-		this.sheetCounter = 0;
-		this.mc = [];
-		this.endChar = "!";
-		if(this.port && this.port.isOpen) {
-			this.port.close();
-		}
-		this.port
-		.on('error', this.errorHandler.bind(this))
-		.on('open', this.openHandler.bind(this));
-		this.port.pipe(new serialPort.parsers.Delimiter(
-			{
-				delimiter: Buffer.from('\r', 'utf8'), 
-				encoding: 'utf8',
-				includeDelimiter: true
-			}
-		))
-		.on('data', this.dataHandler.bind(this));
-		this.port.open();
-	}
-	static start(path = '/dev/ttyS0') {
-		try {
-			new Simulator(path)
-			.on('error', error => {
-				throw new Error(error);
-			})
-			.on('data', console.log)
-			.on('done', sheetCounter => {
-				console.log(`Simulated ${sheetCounter} sheets`);
-				console.log(this);
-			})
-			.action();
-			return Promise.resolve();
-		}
-		catch(error) {
-			return Promise.reject(error);
-		}
-	}
 }
 
-module.exports = Simulator;
+module.exports = io => {
+	io.on('connect', socket => {
+		console.log(`Socket '${socket.id}' connected from ${socket.handshake.address} on ${socket.handshake.time}`);
+		//-- Simulator and its events
+		let simulator = new Simulator('/dev/ttyS0')
+		.on('error', error => {
+			socket.emit('simulatorError', error.message);
+		})
+		.on('started', () => {
+			socket.emit('simulatorStarted');
+		})
+		.on('stopped', () => {
+			socket.emit('simulatorStopped');
+		});
+		//-- Socket events
+		socket
+		.on('start', () => {
+			simulator.controller('start');
+		})
+		.on('stop', () => {
+			simulator.controller('stop');
+		});
+	});
+};

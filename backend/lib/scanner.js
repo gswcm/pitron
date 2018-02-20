@@ -224,9 +224,7 @@ class Scanner extends eventEmitter {
 		return new Promise((resolve,reject) => {
 			this.port
 			.on('error', error => {
-				let msg = `${this.path}: ${error}`;
-				// console.error(msg);
-				reject(msg);
+				reject(`${this.path}: ${error}`);
 			})
 			.on('open', () => {
 				this.write("\x0D\x1BQREV\x0D");
@@ -243,7 +241,7 @@ class Scanner extends eventEmitter {
 				}
 				else if(data.indexOf("MODEL") > -1) {
 					resolve({
-						port: this.path,
+						path: this.path,
 						model: data 
 					});
 				}
@@ -261,12 +259,14 @@ class Scanner extends eventEmitter {
 		});
 	}
 	static findScantrons() {
+		const pathsToExclude= ['/dev/ttyAMA0'];
 		return serialPort.list()
 		.then(ports => {
-			return Promise.all(ports.map(port => {
-				return new Scanner(port.comName).findScantron()
+			const paths = ports.map(e => e.comName).filter(e => pathsToExclude.indexOf(e) === -1);
+			return Promise.all(paths.map(path => {
+				return new Scanner(path).findScantron()
 				.catch(error => {
-					console.error(`${port.comName}: ${error}`);
+					console.error(`${path}: ${error}`);
 					return Promise.resolve(null);
 				});
 			}))

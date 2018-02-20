@@ -6,16 +6,16 @@
 		</div>
 		<b-row class="mt-3">
 			<!-- Settings -->
-			<b-col cols="12" sm="auto">
+			<b-col cols="12" sm="5">
 				<!-- Select Scantron device -->
-				<b-row align-v="end">
+				<b-row align-v="end" class="mt-4">
 					<b-col cols="12">
 						<label><strong>Select Scantron</strong></label>
 					</b-col>
 					<b-col cols="">
 						<b-select v-model="device" size="sm">
 							<option v-if="!devices.length" :value="null">--</option>
-							<option v-for="device in devices" :value="device" :key="device.port">{{device.model.trim()}}</option>
+							<option v-for="device in devices" :value="device" :key="device.path">{{device.model.trim()}}</option>
 						</b-select>
 					</b-col>
 					<b-col cols="auto" class="pl-0">
@@ -24,23 +24,24 @@
 						</b-btn>					
 					</b-col>
 				</b-row>
-				<!-- Start simulator -->
-				<b-row align-v="end" class="mt-3">
+				<!-- Simulator -->
+				<b-row align-v="end" class="mt-4">
 					<b-col cols="12">
-						<label><strong>Simulator</strong></label>
+						<label><strong>Simulator service</strong></label>
 					</b-col>
-					<b-col cols="">
-						<b-form-input  size="sm" v-model="simulatorPort" placeholder="simulator port"/>
-					</b-col>
-					<b-col cols="auto" class="pl-0">
-						<b-btn :disabled="simulatorServiceStarted" variant="outline-light" @click="startSimulator" size="sm">
+					<b-col cols="auto">
+						<b-btn :disabled="simIsRunning" variant="outline-light" @click="simController('start')" size="sm">
 							<font-awesome-icon :icon="['fas', 'play']"/>
 						</b-btn>					
 					</b-col>
 					<b-col cols="auto" class="pl-0">
-						<b-btn :disabled="!simulatorServiceStarted" variant="outline-light" @click="stopSimulator" size="sm">
+						<b-btn :disabled="!simIsRunning" variant="outline-light" @click="simController('stop')" size="sm">
 							<font-awesome-icon :icon="['fas', 'stop']"/>
 						</b-btn>					
+					</b-col>
+					<b-col cols="">
+						Status:&nbsp;
+						<span :class="simIsRunning ? 'text-success' : 'text-danger'">{{simIsRunning ? 'running' : 'stopped'}}</span>
 					</b-col>
 				</b-row>
 				<div class="py-5 mt-5"></div>
@@ -60,42 +61,35 @@ export default {
 	data: () => ({
 		devices: [],
 		device: null,
-		simulatorPort: '/dev/ttyS0',
-		simulatorServiceStarted: false
+		simIsRunning: false
 	}),
+	sockets: {
+		connect(s) {
+			this.$noty.success(`Simulator socket connected...`);
+		},
+		simulatorError(msg) {
+			this.$noty.error(`Simulator error: ${msg}`);
+			this.simIsRunning = false;
+			this.getDevices();
+		},
+		simulatorStarted() {
+			this.$noty.info(`Simulator started...`);
+			this.simIsRunning = true;
+			this.getDevices();
+		},
+		simulatorStopped() {
+			this.$noty.info(`Simulator stopped...`);
+			this.simIsRunning = false;
+			this.getDevices();
+		}
+	},
 	computed: {
 	},
 	created() {
-		this.getDevices();
 	},
 	methods: {
-		stopSimulator() {
-
-		},
-		startSimulator() {
-			this.axios
-			.post("/api/simulator", {
-				port: this.simulatorPort
-			})
-			.then(response => {
-				if (response.data.status) {
-					//-- server error
-					let error = response.data.error || new Error("not sure");
-					throw error;
-				} 
-				else {
-					this.$noty.success(
-						`Scantron simulator service started successfully`
-					);			
-					this.simulatorServiceStarted = true;
-				}
-			})
-			.catch(error => {
-				this.$noty.error(
-					`Something went wrong... more specifically: ${error.message}`
-				);
-				console.error(error.stack);
-			});
+		simController(action) {
+			this.$socket.emit(action);
 		},
 		getDevices() {
 			this.axios
@@ -109,8 +103,13 @@ export default {
 				else {
 					if(response.data.devices && Array.isArray(response.data.devices)) {
 						this.devices = response.data.devices;
-						if(this.devices.length && this.devices.indexOf(this.device) === -1) {
-							this.device = this.devices[0];
+						if(this.devices.length) {
+							if(this.devices.indexOf(this.device) === -1) {
+								this.device = this.devices[0];
+							}
+						}
+						else {
+							this.device = null;
 						}
 					}
 				}
