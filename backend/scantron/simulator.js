@@ -17,7 +17,10 @@ module.exports = io => {
 		});
 		//-- Socket events
 		socket
-		.on('simulatorStart', () => {
+		.on('simulatorStart', simNumSheets => {
+			if(simNumSheets) {
+				simulator.setNumSheets(simNumSheets);
+			}
 			simulator.controller('start');
 		})
 		.on('simulatorStop', () => {
