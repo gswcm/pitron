@@ -16,6 +16,8 @@ import {
 	faSyncAlt,
 	faPlay,
 	faStop,
+	faPlus,
+	faMinus,
 } from '@fortawesome/fontawesome-free-solid';
 import bootstrapVue from 'bootstrap-vue';
 import root from './components/root.vue';
@@ -29,7 +31,9 @@ fontawesome.library.add(
 	faDownload,
 	faSyncAlt,
 	faPlay,
-	faStop
+	faStop,
+	faPlus,
+	faMinus
 );
 
 const router = new vueRouter({

@@ -32,8 +32,21 @@
 					<b-col cols="12">
 						<label><strong>Simulator service</strong></label>
 					</b-col>
-					<b-col cols="5">
-						<b-form-input size="sm" type="number" v-model="simNumSheets" placeholder="sheets to sim (3)" :disabled="simIsRunning"/>
+					<b-col cols="">
+						<b-input-group>
+							<b-input-group-prepend>
+								<b-btn :disabled="simIsRunning" size="sm" class="border-0" variant="light">
+									<font-awesome-icon :icon="['fas', 'minus']" @click="decSimNumSheets"/>
+								</b-btn>
+							</b-input-group-prepend>	
+							<b-form-input class="text-center border-0" size="sm" min="0" type="number" v-model="simNumSheets" :disabled="simIsRunning"/>
+							<b-input-group-append>
+								<b-btn :disabled="simIsRunning" size="sm" variant="light">
+									<font-awesome-icon :icon="['fas', 'plus']" @click="simNumSheets++"/>
+								</b-btn>
+							</b-input-group-append>
+						</b-input-group>
+						<!-- <b-form-input size="sm" type="number" v-model="simNumSheets" placeholder="sheets to sim (3)" :disabled="simIsRunning"/> -->
 					</b-col>
 					<b-col cols="auto" class="pl-0">
 						<b-btn :disabled="simIsRunning" variant="outline-light" @click="$socket.emit('simulatorStart', simNumSheets)" size="sm">
@@ -62,7 +75,7 @@
 				<div class="py-3"></div>
 			</b-col>
 			<!-- Vertical line -->
-			<b-col cols="auto" class="pl-0 d-none d-sm-block border-left border-light"/>
+			<b-col cols="auto" class="pl-3 d-none d-sm-block border-left border-light"/>
 			<!-- Action -->
 			<b-col cols="12" sm="">
 				<div class="d-block">
@@ -95,7 +108,7 @@ export default {
 		device: null,
 		simIsRunning: false,
 		scanRunning: false,
-		simNumSheets: null,
+		simNumSheets: 10,
 		scanData: [],
 		receiver: 'https://hmt.gswcm.net/scantron'
 	}),
@@ -153,6 +166,11 @@ export default {
 				return result;
 			}).join('\n');
 		}, 
+		decSimNumSheets() {
+			if(this.simNumSheets > 0) {
+				this.simNumSheets--;
+			}
+		},
 		startScanning() {
 			this.$socket.emit('scannerStart', this.device.path, this.receiver);
 			this.scanRunning = true;
@@ -203,5 +221,11 @@ export default {
 	}
 	textarea {
 		font-family: 'Roboto Mono', monospace;
+	}
+	.form-control:focus,
+	.form-control.is-invalid,
+	.btn:focus {
+		outline: 0;
+		box-shadow: none;
 	}
 </style>
