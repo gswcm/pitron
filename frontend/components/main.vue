@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<!-- Header -->
-		<div class="d-flex justify-content-center align-items-center border-bottom border-light">
+		<div class="p-3 d-flex justify-content-center align-items-center border-bottom border-light">
 			<h4>PiTron &mdash; Scantron driven by RasPi</h4>
 		</div>
 		<b-row class="mt-3">
@@ -59,15 +59,30 @@
 						<b-form-input size="sm" type="text" v-model="receiver" placeholder="socket.io receiver" :disabled="scanRunning"/>
 					</b-col>
 				</b-row>
-				<div class="py-5"></div>
+				<div class="py-3"></div>
 			</b-col>
 			<!-- Vertical line -->
 			<b-col cols="auto" class="pl-0 d-none d-sm-block border-left border-light"/>
 			<!-- Action -->
 			<b-col cols="12" sm="">
-				<b-btn variant="outline-light" :disabled="!device || scanRunning" @click="startScanning">
-					Start
-				</b-btn>
+				<div class="d-block">
+					<div class="d-flex justify-content-center">
+						<div class="panel text-primary" @click="$refs.scanDataDisplay.show()">
+							{{scanData.length}}
+						</div>
+					</div>
+				</div>
+				<b-modal title="Scan data" ref="scanDataDisplay" ok-only>
+					<b-textarea :value="a2s(scanData)" :rows="10" :max-rows="10" wrap="off" class="bg-light" :no-resize="true"></b-textarea>
+				</b-modal>
+				<div class="d-flex justify-content-center mt-5">
+					<b-btn variant="outline-warning" :disabled="scanRunning" @click="scanData = []">
+						Reset
+					</b-btn>
+					<b-btn class="ml-5" variant="outline-success" :disabled="!device || scanRunning" @click="startScanning">
+						Start
+					</b-btn>
+				</div>
 			</b-col>
 		</b-row>
 	</div>
@@ -81,6 +96,7 @@ export default {
 		simIsRunning: false,
 		scanRunning: false,
 		simNumSheets: null,
+		scanData: [],
 		receiver: 'https://hmt.gswcm.net/scantron'
 	}),
 	sockets: {
@@ -107,6 +123,7 @@ export default {
 		},
 		scannerData(data) {
 			console.log(data);
+			this.scanData.push(data);
 		},
 		scannerDone(sheetCounter) {
 			console.log(sheetCounter);
@@ -118,6 +135,24 @@ export default {
 	created() {
 	},
 	methods: {
+		a2s(a) {
+			return a.map(i => {
+				let result = "";
+				if(i.length > 4) {
+					result += `${i.substr(0,4)} `;
+					if(i.length > 44) {
+						result += `${i.substr(4,40)} ${i.substr(44)}`;
+					}
+					else {
+						result += `${i.substr(4)}`;
+					}
+				}
+				else {
+					result = i;
+				}
+				return result;
+			}).join('\n');
+		}, 
 		startScanning() {
 			this.$socket.emit('scannerStart', this.device.path, this.receiver);
 			this.scanRunning = true;
@@ -158,7 +193,15 @@ export default {
 
 
 <style>
-	h3, h4 {
+	h3, h4, .panel {
 		font-family: 'Mukta Mahee', sans-serif;
+	}
+	.panel {
+		font-size: 15em;
+		line-height: 1;
+		cursor: pointer;
+	}
+	textarea {
+		font-family: 'Roboto Mono', monospace;
 	}
 </style>
