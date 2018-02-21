@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="container py-3">
 		<!-- Header -->
 		<div class="p-3 d-flex justify-content-center align-items-center border-bottom border-light">
 			<h4>PiTron &mdash; Scantron driven by RasPi</h4>
