@@ -28,7 +28,7 @@
 					</b-col>
 				</b-row>
 				<!-- Simulator -->
-				<b-row align-v="end" class="mt-4">
+				<b-row align-v="end" class="mt-4" v-if="true">
 					<b-col cols="12">
 						<label><strong>Simulator service</strong></label>
 					</b-col>
@@ -46,7 +46,6 @@
 								</b-btn>
 							</b-input-group-append>
 						</b-input-group>
-						<!-- <b-form-input size="sm" type="number" v-model="simNumSheets" placeholder="sheets to sim (3)" :disabled="simIsRunning"/> -->
 					</b-col>
 					<b-col cols="auto" class="pl-0">
 						<b-btn :disabled="simIsRunning" variant="outline-light" @click="$socket.emit('simulatorStart', simNumSheets)" size="sm">
@@ -92,7 +91,7 @@
 					<b-btn variant="outline-warning" :disabled="scanRunning" @click="scanData = []">
 						Reset
 					</b-btn>
-					<b-btn class="ml-5" variant="outline-success" :disabled="!device || scanRunning" @click="startScanning">
+					<b-btn class="ml-5" variant="outline-success" :disabled="!device || scanRunning" @click="$socket.emit('scannerStart', device.path, receiver);">
 						Start
 					</b-btn>
 				</div>
@@ -108,13 +107,15 @@ export default {
 		device: null,
 		simIsRunning: false,
 		scanRunning: false,
+		simulatorPresenceTested: false,
+		simulatorPresent: false,
 		simNumSheets: 10,
 		scanData: [],
 		receiver: 'https://hmt.gswcm.net/scantron'
 	}),
 	sockets: {
 		connect(s) {
-			this.$noty.success(`Simulator socket connected...`);
+			// this.$noty.success(`Simulator socket connected...`);			
 		},
 		simulatorError(msg) {
 			this.$noty.error(`Simulator error: ${msg}`);
@@ -122,12 +123,20 @@ export default {
 			this.getDevices();
 		},
 		simulatorStarted() {
-			this.$noty.info(`Simulator started...`);
+			// this.$noty.info(`Simulator started...`);
 			this.simIsRunning = true;
-			this.getDevices();
+			/* 
+			this.getDevices(() => {
+				if(!this.simulatorPresenceTested) {
+					this.simulatorPresent = this.devices.filter(e => /simulator/ig.test(e.model)).length > 0;
+					this.simulatorPresenceTested = true;
+					this.$socket.emit('simulatorStop');
+				}
+			}); 
+			*/
 		},
 		simulatorStopped() {
-			this.$noty.info(`Simulator stopped...`);
+			// this.$noty.info(`Simulator stopped...`);
 			this.simIsRunning = false;
 			this.getDevices();
 		},
@@ -141,11 +150,16 @@ export default {
 		scannerDone(sheetCounter) {
 			console.log(sheetCounter);
 			this.scanRunning = false;
+		},
+		scannerStarted() {
+			this.scanRunning = true;
+		},
+		scannerStopped() {
+			this.scanRunning = false;
 		}
-	},
-	computed: {
-	},
+	},	
 	created() {
+		// this.$socket.emit('simulatorStart', 10);
 	},
 	methods: {
 		a2s(a) {
@@ -170,10 +184,6 @@ export default {
 			if(this.simNumSheets > 0) {
 				this.simNumSheets--;
 			}
-		},
-		startScanning() {
-			this.$socket.emit('scannerStart', this.device.path, this.receiver);
-			this.scanRunning = true;
 		},
 		getDevices() {
 			this.axios

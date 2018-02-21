@@ -22,6 +22,12 @@ module.exports = io => {
 					localSocket.emit('scannerDone', sheetCounter);
 					remoteSocket.disconnect();
 				})
+				.on('started', () => {
+					localSocket.emit('scannerStarted');
+				})
+				.on('stopped', () => {
+					localSocket.emit('scannerStopped');
+				})
 				.start();
 			});
 		});

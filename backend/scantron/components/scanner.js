@@ -68,11 +68,15 @@ class Scanner extends eventEmitter {
 			this.port.close();
 		}
 	}
+	closeHandler() {
+		this.emit('stopped');
+	}
 	openHandler() {
 		this.fsmState = "doReset";
 		this.fsmSubState = 0;
 		this.sheetCounter = 0;
 		this.frmDataLength = 0;
+		this.emit('started');
 		this.write("\x0D\x1BQREV\x0D");	
 	}
 	write(data) {
@@ -210,7 +214,8 @@ class Scanner extends eventEmitter {
 	start() {
 		this.port
 		.on('error', this.errorHandler.bind(this))
-		.on('open', this.openHandler.bind(this));
+		.on('open', this.openHandler.bind(this))
+		.on('close', this.closeHandler.bind(this));
 		this.port.pipe(new serialPort.parsers.Delimiter(
 			{
 				delimiter: Buffer.from('\r', 'utf8'), 
