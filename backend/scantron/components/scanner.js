@@ -11,6 +11,7 @@ class Scanner extends eventEmitter {
 		this.endChar = "!";
 		this.path = path || '/dev/ttyUSB0';
 		this.frmDataLength = 0;
+		this.watchdog = null;
 		this.frm = {
 			fs: {
 				rows: 62,
@@ -120,6 +121,9 @@ class Scanner extends eventEmitter {
 					this.fsmState = "doDefineForm";
 					this.fsmSubState = -1;
 					this.write("\x1BSRST\x0D");
+					this.watchdog = setTimeout(() => {
+						this.errorHandler(new Error(`Scantron timed out`));
+					}, 5000);
 				}
 				else {
 					this.errorHandler(new Error(`Incorrect data in 'doReset' state, i.e. '${data}'`));
@@ -127,6 +131,7 @@ class Scanner extends eventEmitter {
 				}
 				break;
 			case "doDefineForm":
+				clearTimeout(this.watchdog);
 				if(data === "") {
 					if(this.fsmSubState === -1) {
 						this.fsmSubState++;

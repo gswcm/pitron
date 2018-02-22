@@ -28,7 +28,7 @@
 					</b-col>
 				</b-row>
 				<!-- Simulator -->
-				<b-row align-v="end" class="mt-4" v-if="true">
+				<b-row align-v="end" class="mt-4" v-if="simulatorPresent">
 					<b-col cols="12">
 						<label><strong>Simulator service</strong></label>
 					</b-col>
@@ -115,7 +115,6 @@ export default {
 	}),
 	sockets: {
 		connect(s) {
-			// this.$noty.success(`Simulator socket connected...`);			
 		},
 		simulatorError(msg) {
 			this.$noty.error(`Simulator error: ${msg}`);
@@ -123,20 +122,20 @@ export default {
 			this.getDevices();
 		},
 		simulatorStarted() {
-			// this.$noty.info(`Simulator started...`);
 			this.simIsRunning = true;
-			/* 
-			this.getDevices(() => {
+			this.getDevices()
+			.then(() => {
 				if(!this.simulatorPresenceTested) {
 					this.simulatorPresent = this.devices.filter(e => /simulator/ig.test(e.model)).length > 0;
+					if(this.simulatorPresent) {
+						this.$noty.info(`Simulator connected`);			
+					}
 					this.simulatorPresenceTested = true;
 					this.$socket.emit('simulatorStop');
 				}
-			}); 
-			*/
+			})
 		},
 		simulatorStopped() {
-			// this.$noty.info(`Simulator stopped...`);
 			this.simIsRunning = false;
 			this.getDevices();
 		},
@@ -159,7 +158,7 @@ export default {
 		}
 	},	
 	created() {
-		// this.$socket.emit('simulatorStart', 10);
+		this.$socket.emit('simulatorStart');
 	},
 	methods: {
 		a2s(a) {
@@ -186,7 +185,7 @@ export default {
 			}
 		},
 		getDevices() {
-			this.axios
+			return this.axios
 			.post("/api/list", {})
 			.then(response => {
 				if (response.data.status) {
@@ -206,6 +205,7 @@ export default {
 							this.device = null;
 						}
 					}
+					return Promise.resolve();
 				}
 			})
 			.catch(error => {
